@@ -40,8 +40,8 @@ def ball_moviment(ball_rect, speed):
 
     return ball_rect
 
-font = pygame.font.SysFont("arialblack", 30)
-game_score = {'opponent_score': 0, 'player_score': 0}
+font = pygame.font.SysFont("freesans", 20)
+game_score = {'opponent_score': 0,  'player_score': 0}
 
 player = pygame.Rect(screen_width - 30, screen_height / 2 - 70, 20, 140)
 player_direction = 'idle'
@@ -49,9 +49,9 @@ down_button = False
 up_button = False
 player_speed  = 0
 opponent = pygame.Rect(10, screen_height / 2 - 70, 20, 140)
-opponent_speed = 5
+opponent_speed = 7
 ball = pygame.Rect(screen_width / 2 - 10, screen_height / 2 - 10, 20, 20)
-ball_speed = [7, 7]
+ball_speed = [8, 8]
 
 while run:
 
@@ -110,21 +110,21 @@ while run:
 
     ball = ball_moviment(ball, ball_speed)
 
+    opponent_score, opponent_score_rect = text(font, (255, 255, 255), f'{game_score["opponent_score"]}')
+    opponent_score_rect.right = screen_width / 2 - 20
+    opponent_score_rect.center = (opponent_score_rect.center[0], screen_height / 2)
+
+    player_score, player_score_rect = text(font, (255, 255, 255), f'{game_score["player_score"]}')
+    player_score_rect.left = screen_width / 2 + 20
+    player_score_rect.center = (player_score_rect.center[0], screen_height / 2)
+
+    screen.blit(opponent_score, opponent_score_rect)
+    screen.blit(player_score, player_score_rect)
+
     pygame.draw.line(screen, (200, 200, 200), (screen_width / 2 - 1, 0), (screen_width / 2 - 1, screen_height), width = 2)
     pygame.draw.rect(screen, (225, 225, 225), player)
     pygame.draw.rect(screen, (225, 225, 225), opponent)
     pygame.draw.rect(screen, (225, 225, 225), ball)
-
-    opponent_score, opponent_score_rect = text(font, (255, 255, 255), f'{game_score["opponent_score"]}')
-    opponent_score_rect.y = screen_height / 2
-    opponent_score_rect.right = screen_width / 2 - 20
-
-    player_score, player_score_rect = text(font, (255, 255, 255), f'{game_score["player_score"]}')
-    player_score_rect.y = screen_height / 2
-    player_score_rect.left = screen_width / 2 + 20
-
-    screen.blit(opponent_score, opponent_score_rect)
-    screen.blit(player_score, player_score_rect)
 
     clock.tick(60)
     pygame.display.update()
