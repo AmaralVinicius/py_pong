@@ -1,6 +1,6 @@
 import pygame
 from pygame.locals import *
-from random import randint
+import random
 
 pygame.init()
 clock = pygame.time.Clock()
@@ -17,31 +17,59 @@ def text(font, color,text):
     text_rect = text_surface.get_rect()
     return (text_surface, text_rect)
 
+def ball_start(ball_rect, speed, score_timer):
+
+    ball_rect.center = (screen_width / 2, screen_height / 2)
+
+    current_time = pygame.time.get_ticks()
+    if current_time - score_timer < 3500:
+        ball_speed = [0, 0]
+        if current_time - score_timer < 500:
+            return score_timer, 0
+        elif current_time - score_timer < 1500:
+            return score_timer, 1
+        elif current_time - score_timer < 2500:
+            return score_timer, 2
+        elif current_time - score_timer < 3500:
+            return score_timer, 3
+    else:
+        score_timer = 0
+        speed[0] = 8 * random.choice((1, -1))
+        speed[1] = 8 * random.choice((1, -1))
+        return score_timer, 0
+
 def ball_moviment(ball_rect, speed):
-    ball_rect.x += speed[0]
-    ball_rect.y += speed[1]
-    
-    if ball_rect.top <= 0:
-        ball_rect.top = 0
-        speed[1] *= -1
-    if ball_rect.bottom >= screen_height:
-        ball_rect.bottom = screen_height
-        speed[1] *= -1
-    if ball_rect.right >= screen_width:
-        game_score['opponent_score'] += 1
-        ball_rect.right = screen_width
-        speed[0] *= -1
-        ball_rect = pygame.Rect(screen_width / 2 - 10, screen_height / 2 - 10, 20, 20)
-    if ball_rect.left <= 0:
-        game_score['player_score'] += 1
-        ball_rect.left = 0
-        speed[0] *= -1
-        ball_rect = pygame.Rect(screen_width / 2 - 10, screen_height / 2 - 10, 20, 20)
+    global score_timer
+    if score_timer == 0:
+        ball_rect.x += speed[0]
+        ball_rect.y += speed[1]
+        
+        if ball_rect.top <= 0:
+            ball_rect.top = 0
+            speed[1] *= -1
+        if ball_rect.bottom >= screen_height:
+            ball_rect.bottom = screen_height
+            speed[1] *= -1
+        if ball_rect.right >= screen_width:
+            ball_rect.right = screen_width
+            speed[0] *= -1
+            game_score['opponent_score'] += 1
+            score_timer = pygame.time.get_ticks()
+        if ball_rect.left <= 0:
+            ball_rect.left = 0
+            speed[0] *= -1
+            game_score['player_score'] += 1
+            score_timer = pygame.time.get_ticks()
 
     return ball_rect
 
-font = pygame.font.SysFont("freesans", 20)
+
+font = pygame.font.SysFont("freesansbold", 30)
 game_score = {'opponent_score': 0,  'player_score': 0}
+score_timer = 1000
+score_timer_counter = 0
+score_background = pygame.Rect(0, 0, 400, 75)
+score_background.center = (screen_width / 2, screen_height / 2)
 
 player = pygame.Rect(screen_width - 30, screen_height / 2 - 70, 20, 140)
 player_direction = 'idle'
@@ -51,10 +79,9 @@ player_speed  = 0
 opponent = pygame.Rect(10, screen_height / 2 - 70, 20, 140)
 opponent_speed = 7
 ball = pygame.Rect(screen_width / 2 - 10, screen_height / 2 - 10, 20, 20)
-ball_speed = [8, 8]
+ball_speed = [0, 0]
 
 while run:
-
     screen.fill((11, 11, 21))
 
     for event in pygame.event.get():
@@ -110,6 +137,9 @@ while run:
 
     ball = ball_moviment(ball, ball_speed)
 
+    pygame.draw.line(screen, (200, 200, 200), (screen_width / 2 - 1, 0), (screen_width / 2 - 1, screen_height), width = 2)
+    pygame.draw.rect(screen, (11, 11, 21), score_background)
+
     opponent_score, opponent_score_rect = text(font, (255, 255, 255), f'{game_score["opponent_score"]}')
     opponent_score_rect.right = screen_width / 2 - 20
     opponent_score_rect.center = (opponent_score_rect.center[0], screen_height / 2)
@@ -121,10 +151,17 @@ while run:
     screen.blit(opponent_score, opponent_score_rect)
     screen.blit(player_score, player_score_rect)
 
-    pygame.draw.line(screen, (200, 200, 200), (screen_width / 2 - 1, 0), (screen_width / 2 - 1, screen_height), width = 2)
     pygame.draw.rect(screen, (225, 225, 225), player)
     pygame.draw.rect(screen, (225, 225, 225), opponent)
     pygame.draw.rect(screen, (225, 225, 225), ball)
+
+    if score_timer_counter != 0:
+        timer_text, timer_text_rect = text(font, (6, 6, 17), f'{score_timer_counter}')
+        timer_text_rect.center = (screen_width / 2, screen_height / 2 + 1)
+        screen.blit(timer_text,  timer_text_rect)
+
+    if score_timer:
+        score_timer, score_timer_counter = ball_start(ball, ball_speed, score_timer)
 
     clock.tick(60)
     pygame.display.update()
