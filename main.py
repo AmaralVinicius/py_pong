@@ -34,8 +34,8 @@ def ball_start(ball_rect, speed, score_timer):
             return score_timer, 3
     else:
         score_timer = 0
-        speed[0] = 8 * random.choice((1, -1))
-        speed[1] = 8 * random.choice((1, -1))
+        speed[0] = 9 * random.choice((1, -1))
+        speed[1] = 9 * random.choice((1, -1))
         return score_timer, 0
 
 def ball_moviment(ball_rect, speed):
@@ -63,7 +63,6 @@ def ball_moviment(ball_rect, speed):
 
     return ball_rect
 
-
 font = pygame.font.SysFont("freesansbold", 30)
 game_score = {'opponent_score': 0,  'player_score': 0}
 score_timer = 1000
@@ -76,8 +75,10 @@ player_direction = 'idle'
 down_button = False
 up_button = False
 player_speed  = 0
+player_collision = {'top': False, 'bottom': False, 'right': False, 'left': False}
 opponent = pygame.Rect(10, screen_height / 2 - 70, 20, 140)
-opponent_speed = 7
+opponent_speed = 7.5
+opponent_collision = {'top': False, 'bottom': False, 'right': False, 'left': False}
 ball = pygame.Rect(screen_width / 2 - 10, screen_height / 2 - 10, 20, 20)
 ball_speed = [0, 0]
 
@@ -108,9 +109,6 @@ while run:
                 else:
                     player_direction = 'idle'
 
-    if ball.colliderect(player) or ball.colliderect(opponent):
-        ball_speed[0] *= -1
-
     if opponent.center[1] < ball.center[1] and opponent.bottom < screen_height:
         opponent.y  += opponent_speed
     if opponent.center[1] > ball.center[1] and opponent.top > 0:
@@ -137,6 +135,66 @@ while run:
 
     ball = ball_moviment(ball, ball_speed)
 
+    if ball.colliderect(player):
+        top = abs(ball.top - player.bottom)
+        bottom = abs(ball.bottom - player.top)
+        right = abs(ball.right - player.left)
+        left = abs(ball.left - player.right)
+
+        if min((top, bottom, right, left)) == top and ball_speed[1] < 0:
+            player_collision['top'] = True
+        if min((top, bottom, right, left)) == bottom and ball_speed[1] > 0:
+            player_collision['bottom'] = True
+        if min((top, bottom, right, left)) == right and ball_speed[0] > 0:
+            player_collision['right'] = True
+        if min((top, bottom, right, left)) == left and ball_speed[0] < 0:
+            player_collision['left'] = True
+
+        if player_collision['top']:
+            ball.top = player.bottom
+            ball_speed[1] = abs(ball_speed[1])
+        if player_collision['bottom']:
+            ball.bottom = player.top
+            ball_speed[1] = -(abs(ball_speed[1]))
+        if player_collision['right']:
+            ball.right = player.left
+            ball_speed[0] = -(abs(ball_speed[0]))
+        if player_collision['left']:
+            ball.left = player.right
+            ball_speed[0] = abs(ball_speed[0])
+    else:
+        player_collision = {'top': False, 'bottom': False, 'right': False, 'left': False}
+
+    if ball.colliderect(opponent):
+        top = abs(ball.top - opponent.bottom)
+        bottom = abs(ball.bottom - opponent.top)
+        right = abs(ball.right - opponent.left)
+        left = abs(ball.left - opponent.right)
+
+        if min((top, bottom, right, left)) == top and ball_speed[1] < 0:
+            opponent_collision['top'] = True
+        if min((top, bottom, right, left)) == bottom and ball_speed[1] > 0:
+            opponent_collision['bottom'] = True
+        if min((top, bottom, right, left)) == right and ball_speed[0] > 0:
+            opponent_collision['right'] = True
+        if min((top, bottom, right, left)) == left and ball_speed[0] < 0:
+            opponent_collision['left'] = True
+
+        if opponent_collision['top']:
+            ball.top = opponent.bottom
+            ball_speed[1] = abs(ball_speed[1])
+        if opponent_collision['bottom']:
+            ball.bottom = opponent.top
+            ball_speed[1] = -(abs(ball_speed[1]))
+        if opponent_collision['right']:
+            ball.right = opponent.left
+            ball_speed[0] = -(abs(ball_speed[0]))
+        if opponent_collision['left']:
+            ball.left = opponent.right
+            ball_speed[0] = abs(ball_speed[0])
+        else:
+            opponent_collision = {'top': False, 'bottom': False, 'right': False, 'left': False}
+
     pygame.draw.line(screen, (200, 200, 200), (screen_width / 2 - 1, 0), (screen_width / 2 - 1, screen_height), width = 2)
     pygame.draw.rect(screen, (11, 11, 21), score_background)
 
@@ -153,7 +211,7 @@ while run:
 
     pygame.draw.rect(screen, (225, 225, 225), player)
     pygame.draw.rect(screen, (225, 225, 225), opponent)
-    pygame.draw.rect(screen, (225, 225, 225), ball)
+    pygame.draw.rect(screen, (225, 75, 75), ball)
 
     if score_timer_counter != 0:
         timer_text, timer_text_rect = text(font, (6, 6, 17), f'{score_timer_counter}')
