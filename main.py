@@ -2,6 +2,7 @@ import pygame
 from pygame.locals import *
 import random
 
+pygame.mixer.pre_init(44100, -16, 2, 512)
 pygame.init()
 clock = pygame.time.Clock()
 
@@ -38,24 +39,28 @@ def ball_start(ball_rect, speed, score_timer):
         speed[1] = 9 * random.choice((1, -1))
         return score_timer, 0
 
-def ball_moviment(ball_rect, speed):
+def ball_moviment(ball_rect, speed, pong_sound, player_score_sound, opponent_score_sound):
     global score_timer
     if score_timer == 0:
         ball_rect.x += speed[0]
         ball_rect.y += speed[1]
         
         if ball_rect.top <= 0:
+            pong_sound.play()
             ball_rect.top = 0
             speed[1] *= -1
         if ball_rect.bottom >= screen_height:
+            pong_sound.play()
             ball_rect.bottom = screen_height
             speed[1] *= -1
         if ball_rect.right >= screen_width:
+            opponent_score_sound.play()
             ball_rect.right = screen_width
             speed[0] *= -1
             game_score['opponent_score'] += 1
             score_timer = pygame.time.get_ticks()
         if ball_rect.left <= 0:
+            player_score_sound.play()
             ball_rect.left = 0
             speed[0] *= -1
             game_score['player_score'] += 1
@@ -81,6 +86,13 @@ opponent_speed = 7.5
 opponent_collision = {'top': False, 'bottom': False, 'right': False, 'left': False}
 ball = pygame.Rect(screen_width / 2 - 10, screen_height / 2 - 10, 20, 20)
 ball_speed = [0, 0]
+
+pong_sound = pygame.mixer.Sound("assets/pong.ogg")
+opponent_score_sound = pygame.mixer.Sound("assets/opponent_score.ogg")
+player_score_sound = pygame.mixer.Sound("assets/player_score.ogg")
+soundtrack = pygame.mixer.Sound("assets/soundtrack.ogg")
+soundtrack.set_volume(0.4)
+soundtrack.play(-1, fade_ms=2000)
 
 while run:
     screen.fill((11, 11, 21))
@@ -133,9 +145,10 @@ while run:
     if opponent.bottom >= screen_height:
         opponent.bottom = screen_height
 
-    ball = ball_moviment(ball, ball_speed)
+    ball = ball_moviment(ball, ball_speed, pong_sound, player_score_sound, opponent_score_sound)
 
     if ball.colliderect(player):
+        pong_sound.play()
         top = abs(ball.top - player.bottom)
         bottom = abs(ball.bottom - player.top)
         right = abs(ball.right - player.left)
@@ -166,6 +179,7 @@ while run:
         player_collision = {'top': False, 'bottom': False, 'right': False, 'left': False}
 
     if ball.colliderect(opponent):
+        pong_sound.play()
         top = abs(ball.top - opponent.bottom)
         bottom = abs(ball.bottom - opponent.top)
         right = abs(ball.right - opponent.left)
